@@ -23,6 +23,7 @@
 #include "direct_utils.h"
 #include "hw_intr.h"
 #include "arch_proto.h"
+#include "board_version.h"
 
 #ifdef CONFIG_SMP
 #include "smp.h"
@@ -122,7 +123,6 @@ void kmain(kinfo_t *local_cbi)
   register struct proc *rp;	/* process pointer */
   register int i, j;
   static int bss_test;
-
   /* bss sanity check */
   assert(bss_test == 0);
   bss_test = 1;
@@ -130,7 +130,7 @@ void kmain(kinfo_t *local_cbi)
   /* save a global copy of the boot parameters */
   memcpy(&kinfo, local_cbi, sizeof(kinfo));
   memcpy(&kmess, kinfo.kmess, sizeof(kmess));
-
+  int _i=100;
    /* We have done this exercise in pre_init so we expect this code
       to simply work! */
    machine.board_id = get_board_id_by_name(env_get(BOARDVARNAME));
@@ -139,6 +139,10 @@ void kmain(kinfo_t *local_cbi)
   arch_ser_init();
 #endif
   /* We can talk now */
+  
+
+  _i = get_parameter("board model", MBX_TAG_GET_BOARD_MODEL, 1);
+  panic("status %d\n",_i);
   DEBUGBASIC(("MINIX booting\n"));
 
   /* Kernel may use bits of main memory before VM is started */
@@ -343,6 +347,8 @@ static void announce(void)
       "Copyright 2014, Vrije Universiteit, Amsterdam, The Netherlands\n",
       OS_RELEASE);
   printf("MINIX is open source software, see http://www.minix3.org\n");
+
+  panic("32182791823701824\n");
 }
 
 /*===========================================================================*

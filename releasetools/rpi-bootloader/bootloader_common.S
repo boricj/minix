@@ -73,6 +73,8 @@ final_preparations:
 	mov	r0, #2
 	ldr	r1, =argv
 	b	0x00200000
+	ldr 	r0, =bye_bye
+	bl	print
 
 /*
  * Load a file from CPIO archive.
@@ -314,6 +316,8 @@ memcpy_done:
 	pop	{r5-r11}
 	bx	lr
 
+bye_bye:
+	.asciz "BYE BYE"
 msg_empty:
 	.asciz ""
 msg_banner:

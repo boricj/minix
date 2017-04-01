@@ -1,7 +1,7 @@
 : ${OBJ=../obj.${ARCH}-${BSP_NAME}}
 : ${CROSS_TOOLS=${OBJ}/"tooldir.`uname -s`-`uname -r`-`uname -m`"/bin}
 : ${CROSS_PREFIX=${CROSS_TOOLS}/${TOOLCHAIN_TRIPLET}}
-: ${JOBS=1}
+: ${JOBS=16}
 : ${DESTDIR=${OBJ}/destdir.$ARCH}
 : ${RELEASEDIR=${OBJ}/releasedir/$ARCH/binary}
 : ${RELEASETOOLSDIR=./releasetools/}
