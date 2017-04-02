@@ -89,8 +89,8 @@ int get_parameter(const char* name, uint32_t tag, int nwords) {
 	}
 }
 
-int getBoardRevision(){
-	return 3; 
+int get_board_revision(){
+
 	if(get_parameter("board rev", MBX_TAG_GET_BOARD_REVISION, 1)){
 		/*error*/
 	}

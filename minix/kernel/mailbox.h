@@ -24,7 +24,7 @@ uint32_t readmailbox(uint32_t channel) {
 	while(1) {
 		while (*MAILBOX0STATUS & MAILBOX_EMPTY) {
 			/* Need to check if this is the right thing to do */
-			flushcache();
+			_flushcache();
 
 			/* This is an arbritarily large number */
 			if(count++ >(1<<10)) {
@@ -35,9 +35,9 @@ uint32_t readmailbox(uint32_t channel) {
 		/* Read the data
 		 * Data memory barriers as we've switched peripheral
 		 */
-		dmb();
+		_dmb();
 		data = *MAILBOX0READ;
-		dmb();
+		_dmb();
 		
 		if ((data & 15) == channel)
 			return data;
@@ -50,10 +50,10 @@ void writemailbox(uint32_t channel, uint32_t data) {
 	/* Wait for mailbox to be not full */
 	while (*MAILBOX0STATUS & MAILBOX_FULL) 	{
 		/* Need to check if this is the right thing to do */
-		flushcache();
+		_flushcache();
 	}
 
-	dmb();
+	_dmb();
 	*MAILBOX0WRITE = (data | channel);
 }
 

@@ -6,7 +6,7 @@
  * No memory access after the DMB can run until all memory accesses before it
  * have completed
  */
-#define dmb() asm volatile \
+#define _dmb() asm volatile \
 		("mcr p15, #0, %[zero], c7, c10, #5" : : [zero] "r" (0) )
 
 
@@ -15,7 +15,7 @@
  * No instruction after the DSB can run until all instructions before it have
  * completed
  */
-#define dsb() asm volatile \
+#define _dsb() asm volatile \
 		("mcr p15, #0, %[zero], c7, c10, #4" : : [zero] "r" (0) )
 
 
@@ -24,7 +24,7 @@
  * Flush pending writes to main memory
  * Remove all data in data cache
  */
-#define flushcache() asm volatile \
+#define _flushcache() asm volatile \
 		("mcr p15, #0, %[zero], c7, c14, #0" : : [zero] "r" (0) )
 
 #endif	/* BARRIER_H */

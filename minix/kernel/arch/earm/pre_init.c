@@ -1,6 +1,7 @@
 #define UNPAGED 1	/* for proper kmain() prototype */
 
 #include "kernel/kernel.h"
+#include "kernel/board_version.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <minix/minlib.h>
@@ -384,7 +385,21 @@ void set_machine_id(char *cmdline)
 		POORMANS_FAILURE_NOTIFICATION;
 	}
 }
-
+void set_board_name(char *cmdline){
+	int board_version = get_board_revision();
+	if(board_version == 2) {
+	//	env_set(BOARDVARNAME,RPI2_NAME);	
+	/*	Do nothing in current implementation but need to improve*/
+	  }
+	  else{
+	//	env_set(BOARDVARNAME,RPI3_NAME);
+		  char *loc = cmdline;
+		  while(*loc!='2'){
+			loc++;
+	          }
+	 	  *loc = '3';
+	  }
+}
 kinfo_t *pre_init(int argc, char **argv)
 {
 	char *bootargs;
@@ -404,8 +419,11 @@ kinfo_t *pre_init(int argc, char **argv)
 	}
 
 	bootargs = argv[1];
+	set_board_name(bootargs);
 	set_machine_id(bootargs);
 	bsp_ser_init();
+	printf("pre init asfd");
+
 	/* Get our own copy boot params pointed to by ebx.
 	 * Here we find out whether we should do serial output.
 	 */

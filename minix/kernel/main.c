@@ -23,7 +23,6 @@
 #include "direct_utils.h"
 #include "hw_intr.h"
 #include "arch_proto.h"
-#include "board_version.h"
 
 #ifdef CONFIG_SMP
 #include "smp.h"
@@ -33,8 +32,6 @@
 #endif
 #include "spinlock.h"
 
-#define RPI2_NAME "RPI_2_B console=tty00\0"
-#define RPI3_NAME "RPI_3_B console=tty00\0"
 /* dummy for linking */
 char *** _penviron;
 
@@ -133,21 +130,7 @@ void kmain(kinfo_t *local_cbi)
   memcpy(&kinfo, local_cbi, sizeof(kinfo));
   memcpy(&kmess, kinfo.kmess, sizeof(kmess));
  
-  int boardVersion;
-  boardVersion = getBoardRevision();
 
-  if(boardVersion == 2) {
-//	env_set(BOARDVARNAME,RPI2_NAME);	
-/*	Do nothing in current implementation but need to improve*/
-  }
-  else{
-//	env_set(BOARDVARNAME,RPI3_NAME);
-  char *loc = env_get(BOARDVARNAME);
-  while(*loc!='2'){
-	loc++;
-	}
-	*loc = '3';
-  }
    /* We have done this exercise in pre_init so we expect this code
       to simply work! */
    machine.board_id = get_board_id_by_name(env_get(BOARDVARNAME));
