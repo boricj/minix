@@ -1,6 +1,6 @@
 #include "mailbox.h"
 #include <stdlib.h>
-
+/*currently arbitarirtyliy chosen*/
 #define BUFFER_ADDRESS 0x2000
 
 #define RR_REQUEST 0x00000000
@@ -29,7 +29,16 @@
 #define MBX_DEVICE_SPI 0x00000007
 #define MBX_DEVICE_CCP2TX 0x00000008
 
-#define MBX_TAG_GET_BOARD_MODEL 0x00010001
+#define MBX_TAG_GET_BOARD_REVISION 0x00010002
+
+volatile uint32_t *mailbuffer = (uint32_t *) BUFFER_ADDRESS;
+
+uint32_t RPI2_REVISIONS[] = {0xa01040, 0x01041, 0x21041, 0x22042};
+#define NO_RPI2_REVISIONS 4
+
+uint32_t RPI3_REVISIONS[] = { 0xa02082, 0xa020a0, 0xa22082, 0xa32082};
+#define NO_RPI3_REVISIONS 4
+
 
 void add_mailbox_tag(volatile uint32_t* buffer, uint32_t tag, uint32_t buflen, uint32_t len, uint32_t* data) {
   volatile uint32_t* start = buffer + SLOT_TAGSTART;
@@ -62,26 +71,15 @@ void build_mailbox_request(volatile uint32_t* buffer) {
 }
 
 
-volatile uint32_t *mailbuffer = (uint32_t *) BUFFER_ADDRESS;
 
 int get_parameter(const char* name, uint32_t tag, int nwords) {
-  printf("get parameter -> ");
   add_mailbox_tag(mailbuffer, tag, nwords * 4, 0, 0);
-  printf("got mailbox tag -> ");
   build_mailbox_request(mailbuffer);
-  printf("built request -> ");
 
-  printf(" wrote mailbox ->i\n");
 
   writemailbox(8, (uint32_t)mailbuffer);
-  for(int __i=1;__i<=24;__i++){
-	  printf("%08x \t",*(mailbuffer+__i-1));
-	  if(__i%4 == 0)
-		printf("\n");
-  }
   readmailbox(8);
 
-  printf("read mailbox -> \n");
   /* Valid response in data structure */
   if(mailbuffer[1] != 0x80000000) {
   	return 1;  
@@ -89,4 +87,23 @@ int get_parameter(const char* name, uint32_t tag, int nwords) {
   
 	return 0;
 	}
+}
+
+int getBoardRevision(){
+	return 3; 
+	if(get_parameter("board rev", MBX_TAG_GET_BOARD_REVISION, 1)){
+		/*error*/
+	}
+	else{
+		uint32_t value = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH ];
+		for(int _i = 0; _i<NO_RPI2_REVISIONS; _i++){
+			if(value == RPI2_REVISIONS[_i])
+				return 2;
+		}
+		for(int _i = 0; _i<NO_RPI3_REVISIONS; _i++){
+			if(value == RPI3_REVISIONS[_i])
+				return 2;
+		}
+	}
+	return -1;
 }

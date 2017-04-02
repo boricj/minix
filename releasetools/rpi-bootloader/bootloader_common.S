@@ -73,8 +73,7 @@ final_preparations:
 	mov	r0, #2
 	ldr	r1, =argv
 	b	0x00200000
-	ldr 	r0, =bye_bye
-	bl	print
+	
 
 /*
  * Load a file from CPIO archive.

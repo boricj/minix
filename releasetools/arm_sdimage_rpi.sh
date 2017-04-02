@@ -85,29 +85,10 @@ done
 ${CROSS_PREFIX}objcopy ${OBJ}/minix/kernel/kernel -O binary ${ROOT_DIR}/kernel.bin
 # create packer
 ${CROSS_PREFIX}as ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.S -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.o
-${CROSS_PREFIX}as ${RELEASETOOLSDIR}/rpi-bootloader/bootloader3.S -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader3.o
 ${CROSS_PREFIX}ld ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.o -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.elf -Ttext=0x8000 2> /dev/null
-${CROSS_PREFIX}ld ${RELEASETOOLSDIR}/rpi-bootloader/bootloader3.o -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader3.elf -Ttext=0x8000 2> /dev/null
 ${CROSS_PREFIX}objcopy -O binary ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.elf ${ROOT_DIR}/minix_rpi2.bin
-${CROSS_PREFIX}objcopy -O binary ${RELEASETOOLSDIR}/rpi-bootloader/bootloader3.elf ${ROOT_DIR}/minix_rpi3.bin
 # pack modules
 (cd ${ROOT_DIR} && cat <<EOF | cpio -o --format=newc >> ${ROOT_DIR}/minix_rpi2.bin 2>/dev/null
-kernel.bin
-mod01_ds.elf
-mod02_rs.elf
-mod03_pm.elf
-mod04_sched.elf
-mod05_vfs.elf
-mod06_memory.elf
-mod07_tty.elf
-mod08_mib.elf
-mod09_vm.elf
-mod10_pfs.elf
-mod11_mfs.elf
-mod12_init.elf
-EOF
-)
-(cd ${ROOT_DIR} && cat <<EOF | cpio -o --format=newc >> ${ROOT_DIR}/minix_rpi3.bin 2>/dev/null
 kernel.bin
 mod01_ds.elf
 mod02_rs.elf
@@ -127,11 +108,6 @@ cp -r releasetools/rpi-firmware/* ${ROOT_DIR}
 
 # Write GPU config file
 cat <<EOF >${ROOT_DIR}/config.txt
-[pi3]
-kernel=minix_rpi3.bin
-enable_uart=1
-dtoverlay=pi3-disable-bt
-
 [pi2]
 kernel=minix_rpi2.bin
 EOF

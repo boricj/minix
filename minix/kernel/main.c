@@ -33,12 +33,14 @@
 #endif
 #include "spinlock.h"
 
+#define RPI2_NAME "RPI_2_B console=tty00\0"
+#define RPI3_NAME "RPI_3_B console=tty00\0"
 /* dummy for linking */
 char *** _penviron;
 
 /* Prototype declarations for PRIVATE functions. */
 static void announce(void);
-
+void env_set(const char *name, char*value);
 void bsp_finish_booting(void)
 {
   int i;
@@ -126,11 +128,26 @@ void kmain(kinfo_t *local_cbi)
   /* bss sanity check */
   assert(bss_test == 0);
   bss_test = 1;
-
+  
   /* save a global copy of the boot parameters */
   memcpy(&kinfo, local_cbi, sizeof(kinfo));
   memcpy(&kmess, kinfo.kmess, sizeof(kmess));
-  int _i=100;
+ 
+  int boardVersion;
+  boardVersion = getBoardRevision();
+
+  if(boardVersion == 2) {
+//	env_set(BOARDVARNAME,RPI2_NAME);	
+/*	Do nothing in current implementation but need to improve*/
+  }
+  else{
+//	env_set(BOARDVARNAME,RPI3_NAME);
+  char *loc = env_get(BOARDVARNAME);
+  while(*loc!='2'){
+	loc++;
+	}
+	*loc = '3';
+  }
    /* We have done this exercise in pre_init so we expect this code
       to simply work! */
    machine.board_id = get_board_id_by_name(env_get(BOARDVARNAME));
@@ -139,10 +156,7 @@ void kmain(kinfo_t *local_cbi)
   arch_ser_init();
 #endif
   /* We can talk now */
-  
-
-  _i = get_parameter("board model", MBX_TAG_GET_BOARD_MODEL, 1);
-  panic("status %d\n",_i);
+  printf("%s",env_get(BOARDVARNAME)); 
   DEBUGBASIC(("MINIX booting\n"));
 
   /* Kernel may use bits of main memory before VM is started */
@@ -348,7 +362,6 @@ static void announce(void)
       OS_RELEASE);
   printf("MINIX is open source software, see http://www.minix3.org\n");
 
-  panic("32182791823701824\n");
 }
 
 /*===========================================================================*
@@ -515,6 +528,23 @@ char *env_get(const char *name)
 {
 	return get_value(kinfo.param_buf, name);
 }
+
+
+
+/*===========================================================================*
+ *				env_set				     	*
+ *===========================================================================*/
+void env_set(const char *name, char *value){
+	char *location = get_value(kinfo.param_buf, name);
+	if(location!=NULL){
+		while(*value != '\0'){
+			*location = *value;
+			location++;
+			value++;
+		}
+	}
+}
+
 
 void cpu_print_freq(unsigned cpu)
 {

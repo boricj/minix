@@ -14,11 +14,13 @@ void writemailbox(uint32_t channel, uint32_t data);
 
 uint32_t readmailbox(uint32_t channel) {
   uint32_t count = 0;
-  uint32_t data;
+  volatile uint32_t data;
 
 	/* Loop until something is received from channel
 	 * If nothing recieved, it eventually give up and returns 0xffffffff
 	 */
+
+
 	while(1) {
 		while (*MAILBOX0STATUS & MAILBOX_EMPTY) {
 			/* Need to check if this is the right thing to do */
@@ -36,7 +38,7 @@ uint32_t readmailbox(uint32_t channel) {
 		dmb();
 		data = *MAILBOX0READ;
 		dmb();
-
+		
 		if ((data & 15) == channel)
 			return data;
 	}
@@ -53,6 +55,5 @@ void writemailbox(uint32_t channel, uint32_t data) {
 
 	dmb();
 	*MAILBOX0WRITE = (data | channel);
-	printf("contents at mailbox0write: %08x",*MAILBOX0WRITE);
 }
 
