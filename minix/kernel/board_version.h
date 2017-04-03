@@ -1,7 +1,7 @@
 #include "mailbox.h"
-#include <stdlib.h>
+
 /*currently arbitarirtyliy chosen*/
-#define BUFFER_ADDRESS 0x2000
+#define BUFFER_ADDRESS 0x1000
 
 #define RR_REQUEST 0x00000000
 #define RR_RESPONSE_OK 0x80000000
@@ -31,7 +31,8 @@
 
 #define MBX_TAG_GET_BOARD_REVISION 0x00010002
 
-volatile uint32_t *mailbuffer = (uint32_t *) BUFFER_ADDRESS;
+//volatile uint32_t *mailbuffer = (uint32_t *) BUFFER_ADDRESS;
+volatile uint32_t mailbuffer[50] __attribute((aligned(16))); 
 
 uint32_t RPI2_REVISIONS[] = {0xa01040, 0x01041, 0x21041, 0x22042};
 #define NO_RPI2_REVISIONS 4
@@ -79,14 +80,14 @@ int get_parameter(const char* name, uint32_t tag, int nwords) {
 
   writemailbox(8, (uint32_t)mailbuffer);
   readmailbox(8);
-
-  /* Valid response in data structure */
-  if(mailbuffer[1] != 0x80000000) {
+   if(mailbuffer[1] != 0x80000000) {
   	return 1;  
   } else {
   
 	return 0;
-	}
+	}   
+  
+
 }
 
 int get_board_revision(){
@@ -102,8 +103,9 @@ int get_board_revision(){
 		}
 		for(int _i = 0; _i<NO_RPI3_REVISIONS; _i++){
 			if(value == RPI3_REVISIONS[_i])
-				return 2;
+				return 3;
 		}
 	}
 	return -1;
 }
+

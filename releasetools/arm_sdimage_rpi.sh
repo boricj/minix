@@ -85,7 +85,8 @@ done
 ${CROSS_PREFIX}objcopy ${OBJ}/minix/kernel/kernel -O binary ${ROOT_DIR}/kernel.bin
 # create packer
 ${CROSS_PREFIX}as ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.S -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.o
-${CROSS_PREFIX}ld ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.o -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.elf -Ttext=0x8000 2> /dev/null
+${CROSS_PREFIX}ld ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.o -o ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.elf -Ttext=0x8000
+echo "test"
 ${CROSS_PREFIX}objcopy -O binary ${RELEASETOOLSDIR}/rpi-bootloader/bootloader2.elf ${ROOT_DIR}/minix_rpi2.bin
 # pack modules
 (cd ${ROOT_DIR} && cat <<EOF | cpio -o --format=newc >> ${ROOT_DIR}/minix_rpi2.bin 2>/dev/null
@@ -111,7 +112,6 @@ cat <<EOF >${ROOT_DIR}/config.txt
 [pi2]
 kernel=minix_rpi2.bin
 EOF
-
 ${CROSS_TOOLS}/nbmakefs -t msdos -s $FAT_SIZE -O $FAT_START -o "F=32,c=1" ${IMG} ${ROOT_DIR} >/dev/null
 
 #

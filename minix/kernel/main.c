@@ -23,6 +23,7 @@
 #include "direct_utils.h"
 #include "hw_intr.h"
 #include "arch_proto.h"
+#include "board_version.h"
 
 #ifdef CONFIG_SMP
 #include "smp.h"

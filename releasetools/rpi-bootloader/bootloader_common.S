@@ -318,7 +318,7 @@ memcpy_done:
 bye_bye:
 	.asciz "BYE BYE"
 msg_empty:
-	.asciz ""
+	.asciz "    "
 msg_banner:
 	.asciz "MINIX 3 unpacker for Raspberry Pi"
 msg_svcmode:
@@ -333,3 +333,4 @@ msg_size:
 	.asciz " size:0x"
 msg_addr:
 	.asciz "    address:0x"
+

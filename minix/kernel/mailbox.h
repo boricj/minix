@@ -1,8 +1,12 @@
 #include <stdint.h>
 #include "barrier.h"
-static volatile unsigned int *MAILBOX0READ = (unsigned int *) 0x2000b880;
-static volatile unsigned int *MAILBOX0STATUS = (unsigned int *) 0x2000b898;
-static volatile unsigned int *MAILBOX0WRITE = (unsigned int *) 0x2000b8a0;
+static volatile unsigned int *MAILBOX0READ = (unsigned int *) 0x3F00b880;
+static volatile unsigned int *MAILBOX0STATUS = (unsigned int *) 0x3F00b898;
+static volatile unsigned int *MAILBOX0WRITE = (unsigned int *) 0x3F00b8a0;
+
+
+
+
 
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
@@ -19,8 +23,7 @@ uint32_t readmailbox(uint32_t channel) {
 	/* Loop until something is received from channel
 	 * If nothing recieved, it eventually give up and returns 0xffffffff
 	 */
-
-
+ 		
 	while(1) {
 		while (*MAILBOX0STATUS & MAILBOX_EMPTY) {
 			/* Need to check if this is the right thing to do */
@@ -38,7 +41,6 @@ uint32_t readmailbox(uint32_t channel) {
 		_dmb();
 		data = *MAILBOX0READ;
 		_dmb();
-		
 		if ((data & 15) == channel)
 			return data;
 	}

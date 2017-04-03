@@ -385,21 +385,23 @@ void set_machine_id(char *cmdline)
 		POORMANS_FAILURE_NOTIFICATION;
 	}
 }
+
+
+
 void set_board_name(char *cmdline){
-	int board_version = get_board_revision();
-	if(board_version == 2) {
-	//	env_set(BOARDVARNAME,RPI2_NAME);	
-	/*	Do nothing in current implementation but need to improve*/
-	  }
-	  else{
-	//	env_set(BOARDVARNAME,RPI3_NAME);
-		  char *loc = cmdline;
-		  while(*loc!='2'){
-			loc++;
-	          }
-	 	  *loc = '3';
-	  }
+        int board_version = get_board_revision();
+                  char *loc = cmdline;
+                  while(*loc!='2'){
+                        loc++;
+                  }
+
+        if(board_version == 2)
+                *loc = '3';
+        else
+                *loc = '2';
 }
+
+
 kinfo_t *pre_init(int argc, char **argv)
 {
 	char *bootargs;
@@ -422,7 +424,6 @@ kinfo_t *pre_init(int argc, char **argv)
 	set_board_name(bootargs);
 	set_machine_id(bootargs);
 	bsp_ser_init();
-	printf("pre init asfd");
 
 	/* Get our own copy boot params pointed to by ebx.
 	 * Here we find out whether we should do serial output.

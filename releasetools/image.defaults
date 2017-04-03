@@ -4,7 +4,7 @@
 : ${JOBS=16}
 : ${DESTDIR=${OBJ}/destdir.$ARCH}
 : ${RELEASEDIR=${OBJ}/releasedir/$ARCH/binary}
-: ${RELEASETOOLSDIR=./releasetools/}
+: ${RELEASETOOLSDIR=./releasetools}
 : ${BUILDVARS=}
 : ${CREATE_IMAGE_ONLY=0}
 : ${RELEASE_VERSION=$(sh sys/conf/osrelease.sh)}
