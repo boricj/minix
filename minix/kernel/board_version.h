@@ -79,33 +79,17 @@ int get_parameter(const char* name, uint32_t tag, int nwords) {
 
 
   writemailbox(8, (uint32_t)mailbuffer);
-  readmailbox(8);
-   if(mailbuffer[1] != 0x80000000) {
-  	return 1;  
-  } else {
-  
-	return 0;
-	}   
-  
+  int version =  readmailbox(8);
+  return version;  
 
 }
 
 int get_board_revision(){
-
-	if(get_parameter("board rev", MBX_TAG_GET_BOARD_REVISION, 1)){
+  int version =   get_parameter("board rev", MBX_TAG_GET_BOARD_REVISION, 1);
 		/*error*/
-	}
-	else{
-		uint32_t value = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH ];
-		for(int _i = 0; _i<NO_RPI2_REVISIONS; _i++){
-			if(value == RPI2_REVISIONS[_i])
-				return 2;
-		}
-		for(int _i = 0; _i<NO_RPI3_REVISIONS; _i++){
-			if(value == RPI3_REVISIONS[_i])
-				return 3;
-		}
-	}
-	return -1;
+   if(mailbuffer[1] != 0x80000000) 
+  	return -1;
+   return version;
+
 }
 

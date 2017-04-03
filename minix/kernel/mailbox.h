@@ -16,10 +16,10 @@ static volatile unsigned int *RPI3_MAILBOX0WRITE = (unsigned int *) 0x2000b8a0;
 
 
 
-uint32_t readmailbox(uint32_t channel);
+int readmailbox(uint32_t channel);
 void writemailbox(uint32_t channel, uint32_t data);
 
-uint32_t readmailbox(uint32_t channel) {
+int readmailbox(uint32_t channel) {
   uint32_t count = 0;
   volatile uint32_t data;
 
@@ -34,9 +34,9 @@ uint32_t readmailbox(uint32_t channel) {
 			_flushcache();
 
 			/* This is an arbritarily large number */
-			if(count++ >(1<<10)) {
-				return 0xffffffff;
-			}
+//			if(count++ >(1<<10)) {
+//				return 0xffffffff;
+//			}
 		}
 
 		/* Read the data
@@ -46,7 +46,7 @@ uint32_t readmailbox(uint32_t channel) {
 		data = *MAILBOX0READ;
 		_dmb();
 		if ((data & 15) == channel)
-			return data;
+			return 2;
 
 		
 
@@ -55,9 +55,9 @@ uint32_t readmailbox(uint32_t channel) {
 			_flushcache();
 
 			/* This is an arbritarily large number */
-			if(count++ >(1<<10)) {
-				return 0xffffffff;
-			}
+//			if(count++ >(1<<10)) {
+//				return 0xffffffff;
+//			}
 		}
 
 		/* Read the data
@@ -67,7 +67,7 @@ uint32_t readmailbox(uint32_t channel) {
 		data = *RPI3_MAILBOX0READ;
 		_dmb();
 		if ((data & 15) == channel)
-			return data;
+			return 3;
 	}
 
 	return 0;
