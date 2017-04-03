@@ -14,5 +14,7 @@ argv1:
 
 .data
 .align 4
+
 	.space 256
+
 stack_top:

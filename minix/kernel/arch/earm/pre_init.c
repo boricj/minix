@@ -1,6 +1,7 @@
 #define UNPAGED 1	/* for proper kmain() prototype */
 
 #include "kernel/kernel.h"
+#include "kernel/board_version.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <minix/minlib.h>
@@ -385,6 +386,37 @@ void set_machine_id(char *cmdline)
 	}
 }
 
+void set_board_name(char *cmdline){
+        int board_version = get_board_revision();
+        char *loc = cmdline;
+	char *loc2;
+	char *prefix = "board_name=RPI_";
+	while(*loc != '\0'){
+		loc2 = loc;
+		char *pptr =prefix;
+		while(*pptr != '\0'){
+			if(*loc != *pptr)
+			break;
+			pptr ++;
+			loc2++;
+		}
+		if(*pptr == '\0')
+			break;
+		loc++;
+	}
+	if(*loc == '\0'){
+		//invalid arguments
+	}
+	else{ 
+
+		if(board_version == 2)
+	                *loc2 = '2';
+	        else
+        	        *loc2 = '3';
+	}
+}
+
+
 kinfo_t *pre_init(int argc, char **argv)
 {
 	char *bootargs;
@@ -404,8 +436,10 @@ kinfo_t *pre_init(int argc, char **argv)
 	}
 
 	bootargs = argv[1];
+	set_board_name(bootargs);
 	set_machine_id(bootargs);
 	bsp_ser_init();
+
 	/* Get our own copy boot params pointed to by ebx.
 	 * Here we find out whether we should do serial output.
 	 */

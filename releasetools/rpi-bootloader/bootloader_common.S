@@ -73,6 +73,7 @@ final_preparations:
 	mov	r0, #2
 	ldr	r1, =argv
 	b	0x00200000
+	
 
 /*
  * Load a file from CPIO archive.
@@ -314,8 +315,10 @@ memcpy_done:
 	pop	{r5-r11}
 	bx	lr
 
+bye_bye:
+	.asciz "BYE BYE"
 msg_empty:
-	.asciz ""
+	.asciz "    "
 msg_banner:
 	.asciz "MINIX 3 unpacker for Raspberry Pi"
 msg_svcmode:
@@ -330,3 +333,4 @@ msg_size:
 	.asciz " size:0x"
 msg_addr:
 	.asciz "    address:0x"
+

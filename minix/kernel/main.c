@@ -23,6 +23,7 @@
 #include "direct_utils.h"
 #include "hw_intr.h"
 #include "arch_proto.h"
+#include "board_version.h"
 
 #ifdef CONFIG_SMP
 #include "smp.h"
@@ -37,7 +38,7 @@ char *** _penviron;
 
 /* Prototype declarations for PRIVATE functions. */
 static void announce(void);
-
+void env_set(const char *name, char*value);
 void bsp_finish_booting(void)
 {
   int i;
@@ -122,14 +123,14 @@ void kmain(kinfo_t *local_cbi)
   register struct proc *rp;	/* process pointer */
   register int i, j;
   static int bss_test;
-
   /* bss sanity check */
   assert(bss_test == 0);
   bss_test = 1;
-
+  
   /* save a global copy of the boot parameters */
   memcpy(&kinfo, local_cbi, sizeof(kinfo));
   memcpy(&kmess, kinfo.kmess, sizeof(kmess));
+ 
 
    /* We have done this exercise in pre_init so we expect this code
       to simply work! */
@@ -139,6 +140,7 @@ void kmain(kinfo_t *local_cbi)
   arch_ser_init();
 #endif
   /* We can talk now */
+  printf("%s",env_get(BOARDVARNAME)); 
   DEBUGBASIC(("MINIX booting\n"));
 
   /* Kernel may use bits of main memory before VM is started */
@@ -343,6 +345,7 @@ static void announce(void)
       "Copyright 2014, Vrije Universiteit, Amsterdam, The Netherlands\n",
       OS_RELEASE);
   printf("MINIX is open source software, see http://www.minix3.org\n");
+
 }
 
 /*===========================================================================*
@@ -509,6 +512,23 @@ char *env_get(const char *name)
 {
 	return get_value(kinfo.param_buf, name);
 }
+
+
+
+/*===========================================================================*
+ *				env_set				     	*
+ *===========================================================================*/
+void env_set(const char *name, char *value){
+	char *location = get_value(kinfo.param_buf, name);
+	if(location!=NULL){
+		while(*value != '\0'){
+			*location = *value;
+			location++;
+			value++;
+		}
+	}
+}
+
 
 void cpu_print_freq(unsigned cpu)
 {
