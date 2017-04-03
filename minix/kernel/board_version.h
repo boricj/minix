@@ -34,7 +34,7 @@
 //volatile uint32_t *mailbuffer = (uint32_t *) BUFFER_ADDRESS;
 volatile uint32_t mailbuffer[50] __attribute((aligned(16))); 
 
-uint32_t RPI2_REVISIONS[] = {0xa01040, 0x01041, 0x21041, 0x22042};
+uint32_t RPI2_REVISIONS[] = {0xa01040, 0xa01041, 0xa21041, 0xa22042};
 #define NO_RPI2_REVISIONS 4
 
 uint32_t RPI3_REVISIONS[] = { 0xa02082, 0xa020a0, 0xa22082, 0xa32082};

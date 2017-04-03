@@ -6,6 +6,9 @@ static volatile unsigned int *MAILBOX0WRITE = (unsigned int *) 0x3F00b8a0;
 
 
 
+static volatile unsigned int *RPI3_MAILBOX0READ = (unsigned int *) 0x200000b880;
+static volatile unsigned int *RPI3_MAILBOX0STATUS = (unsigned int *) 0x2000b898;
+static volatile unsigned int *RPI3_MAILBOX0WRITE = (unsigned int *) 0x2000b8a0;
 
 
 #define MAILBOX_FULL 0x80000000
@@ -25,6 +28,7 @@ uint32_t readmailbox(uint32_t channel) {
 	 */
  		
 	while(1) {
+		//try RPI2 and RPI3 alternatively 
 		while (*MAILBOX0STATUS & MAILBOX_EMPTY) {
 			/* Need to check if this is the right thing to do */
 			_flushcache();
@@ -40,6 +44,27 @@ uint32_t readmailbox(uint32_t channel) {
 		 */
 		_dmb();
 		data = *MAILBOX0READ;
+		_dmb();
+		if ((data & 15) == channel)
+			return data;
+
+		
+
+		while (*RPI3_MAILBOX0STATUS & MAILBOX_EMPTY) {
+			/* Need to check if this is the right thing to do */
+			_flushcache();
+
+			/* This is an arbritarily large number */
+			if(count++ >(1<<10)) {
+				return 0xffffffff;
+			}
+		}
+
+		/* Read the data
+		 * Data memory barriers as we've switched peripheral
+		 */
+		_dmb();
+		data = *RPI3_MAILBOX0READ;
 		_dmb();
 		if ((data & 15) == channel)
 			return data;

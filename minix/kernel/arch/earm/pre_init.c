@@ -396,9 +396,9 @@ void set_board_name(char *cmdline){
                   }
 
         if(board_version == 2)
-                *loc = '3';
-        else
                 *loc = '2';
+        else
+                *loc = '3';
 }
 
 
