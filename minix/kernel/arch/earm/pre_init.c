@@ -386,19 +386,34 @@ void set_machine_id(char *cmdline)
 	}
 }
 
-
-
 void set_board_name(char *cmdline){
         int board_version = get_board_revision();
-                  char *loc = cmdline;
-                  while(*loc!='2'){
-                        loc++;
-                  }
+        char *loc = cmdline;
+	char *loc2;
+	char *prefix = "board_name=RPI_";
+	while(*loc != '\0'){
+		loc2 = loc;
+		char *pptr =prefix;
+		while(*pptr != '\0'){
+			if(*loc != *pptr)
+			break;
+			pptr ++;
+			loc2++;
+		}
+		if(*pptr == '\0')
+			break;
+		loc++;
+	}
+	if(*loc == '\0'){
+		//invalid arguments
+	}
+	else{ 
 
-        if(board_version == 2)
-                *loc = '2';
-        else
-                *loc = '3';
+		if(board_version == 2)
+	                *loc2 = '2';
+	        else
+        	        *loc2 = '3';
+	}
 }
 
 
