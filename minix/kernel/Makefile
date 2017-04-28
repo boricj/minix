@@ -26,7 +26,7 @@ LDFLAGS+= -T ${LINKERSCRIPT}
 LDFLAGS+= -nostdlib -L${DESTDIR}/usr/lib
 CFLAGS += -fno-stack-protector
 
-CPPFLAGS+= -D__kernel__ 
+CPPFLAGS+= -D__kernel__ -g -O0
 
 # kernel headers are always called through kernel/*.h
 CPPFLAGS+= -I${NETBSDSRCDIR}/minix
@@ -42,10 +42,6 @@ CPPFLAGS+= -I${.CURDIR}/arch/${MACHINE_ARCH}/bsp/include
 CPPFLAGS+= -I${NETBSDSRCDIR}/minix/include/arch/${MACHINE_ARCH}/include
 
 .include "system/Makefile.inc"
-
-.if ${MKPAE:Uno} != "no"
-CPPFLAGS+= -DPAE=1
-.endif
 
 .ifdef CONFIG_SMP
 SRCS+= smp.c

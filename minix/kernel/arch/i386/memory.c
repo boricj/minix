@@ -29,7 +29,7 @@ phys_bytes video_mem_vaddr = 0;
 #define HASPT(procptr) ((procptr)->p_seg.p_cr3 != 0)
 static int nfreepdes = 0;
 #define MAXFREEPDES	2
-static int freepdes[MAXFREEPDES];
+static u64_t freepdes[MAXFREEPDES];
 
 static u32_t phys_get32(phys_bytes v);
 
@@ -49,9 +49,9 @@ void mem_clear_mapcache(void)
 
 /* This function sets up a mapping from within the kernel's address
  * space to any other area of memory, either straight physical
- * memory (pr == NULL) or a process view of memory, in 4MB windows.
- * I.e., it maps in 4MB chunks of virtual (or physical) address space
- * to 4MB chunks of kernel virtual address space.
+ * memory (pr == NULL) or a process view of memory, in 2MB windows.
+ * I.e., it maps in 2MB chunks of virtual (or physical) address space
+ * to 2MB chunks of kernel virtual address space.
  *
  * It recognizes pr already being in memory as a special case (no
  * mapping required).
@@ -81,7 +81,7 @@ static phys_bytes createpde(
 
 	assert(free_pde_idx >= 0 && free_pde_idx < nfreepdes);
 	pde = freepdes[free_pde_idx];
-	assert(pde >= 0 && pde < 1024);
+	assert(pde >= 0 && pde < I386_VM_DIR_ENTRIES);
 
 	if(pr && ((pr == get_cpulocal_var(ptproc)) || iskernelp(pr))) {
 		/* Process memory is requested, and
@@ -92,17 +92,18 @@ static phys_bytes createpde(
 		 */
 		return linaddr;
 	}
-
+#define PR_PDE(i) ((u32_t*)((pr->p_seg.p_cr3_v[0])&I386_VM_ADDR_MASK))[i*2]  /* XXX: clean up paging code */
+#define PTPROC_PDE(i) ((u32_t*)((get_cpulocal_var(ptproc)->p_seg.p_cr3_v[0])&I386_VM_ADDR_MASK))[i*2]  /* XXX: clean up paging code */
 	if(pr) {
 		/* Requested address is in a process that is not currently
 		 * accessible directly. Grab the PDE entry of that process'
 		 * page table that corresponds to the requested address.
 		 */
 		assert(pr->p_seg.p_cr3_v);
-		pdeval = pr->p_seg.p_cr3_v[I386_VM_PDE(linaddr)];
+		pdeval = PR_PDE(I386_VM_PDE(linaddr)); /* XXX: clean up paging code */
 	} else {
 		/* Requested address is physical. Make up the PDE entry. */
-		pdeval = (linaddr & I386_VM_ADDR_MASK_4MB) | 
+		pdeval = (linaddr & I386_VM_ADDR_MASK_BIGPAGE) | 
 			I386_VM_BIGPAGE | I386_VM_PRESENT | 
 			I386_VM_WRITE | I386_VM_USER;
 	}
@@ -112,17 +113,17 @@ static phys_bytes createpde(
 	 * visible.
 	 */
 	assert(get_cpulocal_var(ptproc)->p_seg.p_cr3_v);
-	if(get_cpulocal_var(ptproc)->p_seg.p_cr3_v[pde] != pdeval) {
-		get_cpulocal_var(ptproc)->p_seg.p_cr3_v[pde] = pdeval;
+	if(PTPROC_PDE(pde) != pdeval) { /* XXX: clean up paging code */
+		PTPROC_PDE(pde) = pdeval; /* XXX: clean up paging code */
 		*changed = 1;
 	}
 
-	/* Memory is now available, but only the 4MB window of virtual
+	/* Memory is now available, but only the 2MB window of virtual
 	 * address space that we have mapped; calculate how much of
 	 * the requested range is visible and return that in *bytes,
 	 * if that is less than the requested range.
 	 */
-	offset = linaddr & I386_VM_OFFSET_MASK_4MB; /* Offset in 4MB window. */
+	offset = linaddr & I386_VM_OFFSET_MASK_BIGPAGE; /* Offset in 2MB window. */
 	*bytes = MIN(*bytes, I386_BIG_PAGE_SIZE - offset); 
 
 	/* Return the linear address of the start of the new mapping. */
@@ -186,7 +187,7 @@ static int lin_lin_copy(struct proc *srcproc, vir_bytes srclinaddr,
 		}
 #endif
 
-		/* Set up 4MB ranges. */
+		/* Set up 2MB ranges. */
 		srcptr = createpde(srcproc, srclinaddr, &chunk, 0, &changed);
 		dstptr = createpde(dstproc, dstlinaddr, &chunk, 1, &changed);
 		if(changed)
@@ -336,11 +337,12 @@ int vm_lookup(const struct proc *proc, const vir_bytes virtual,
 	assert(HASPT(proc));
 
 	/* Retrieve page directory entry. */
-	root = (u32_t *) proc->p_seg.p_cr3;
+	root = *(u32_t **)(proc->p_seg.p_cr3 & I386_VM_ADDR_MASK); /* Walk PDTE */
+	root = (u32_t *)((u32_t)root & I386_VM_ADDR_MASK); /* XXX: clean up paging code */
 	assert(!((u32_t) root % I386_PAGE_SIZE));
 	pde = I386_VM_PDE(virtual);
 	assert(pde >= 0 && pde < I386_VM_DIR_ENTRIES);
-	pde_v = phys_get32((u32_t) (root + pde));
+	pde_v = phys_get32((u32_t) (root + pde*2)); /* XXX: clean up paging code */
 
 	if(!(pde_v & I386_VM_PRESENT)) {
 		return EFAULT;
@@ -348,16 +350,16 @@ int vm_lookup(const struct proc *proc, const vir_bytes virtual,
 
 	/* We don't expect to ever see this. */
 	if(pde_v & I386_VM_BIGPAGE) {
-		*physical = pde_v & I386_VM_ADDR_MASK_4MB;
+		*physical = pde_v & I386_VM_ADDR_MASK_BIGPAGE;
 		if(ptent) *ptent = pde_v;
-		*physical += virtual & I386_VM_OFFSET_MASK_4MB;
+		*physical += virtual & I386_VM_OFFSET_MASK_BIGPAGE;
 	} else {
 		/* Retrieve page table entry. */
 		pt = (u32_t *) I386_VM_PFA(pde_v);
 		assert(!((u32_t) pt % I386_PAGE_SIZE));
 		pte = I386_VM_PTE(virtual);
 		assert(pte >= 0 && pte < I386_VM_PT_ENTRIES);
-		pte_v = phys_get32((u32_t) (pt + pte));
+		pte_v = phys_get32((u32_t) (pt + pte*2)); /* XXX: clean up paging code */
 		if(!(pte_v & I386_VM_PRESENT)) {
 			return EFAULT;
 		}
@@ -549,7 +551,7 @@ int vm_memset(struct proc* caller, endpoint_t who, phys_bytes ph, int c,
 	catch_pagefaults = 1;
 
 	/* We can memset as many bytes as we have remaining,
-	 * or as many as remain in the 4MB chunk we mapped in.
+	 * or as many as remain in the 2MB chunk we mapped in.
 	 */
 	while (left > 0) {
 		new_cr3 = 0;

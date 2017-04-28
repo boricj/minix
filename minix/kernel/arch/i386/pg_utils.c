@@ -16,7 +16,8 @@ static phys_bytes kern_phys_start = (phys_bytes) &_kern_phys_base;
 static phys_bytes kern_kernlen = (phys_bytes) &_kern_size;
 
 /* page directory we can use to map things */
-static u32_t pagedir[1024]  __aligned(4096);
+static u64_t pagedir[I386_VM_DIR_ENTRIES]  __aligned(4096);
+static u64_t pagedirtable[4]  __aligned(32);
 
 void print_memmap(kinfo_t *cbi)
 {
@@ -120,11 +121,11 @@ void add_memmap(kinfo_t *cbi, u64_t addr, u64_t len)
         panic("no available memmap slot");
 }
 
-u32_t *alloc_pagetable(phys_bytes *ph)
+u64_t *alloc_pagetable(phys_bytes *ph)
 {
-	u32_t *ret;
+	u64_t *ret;
 #define PG_PAGETABLES 6
-	static u32_t pagetables[PG_PAGETABLES][1024]  __aligned(4096);
+	static u64_t pagetables[PG_PAGETABLES][512]  __aligned(4096);
 	static int pt_inuse = 0;
 	if(pt_inuse >= PG_PAGETABLES) panic("no more pagetables");
 	assert(sizeof(pagetables[pt_inuse]) == I386_PAGE_SIZE);
@@ -175,8 +176,8 @@ void pg_identity(kinfo_t *cbi)
 			| I386_VM_USER
 			| I386_VM_WRITE;
                 phys = i * I386_BIG_PAGE_SIZE;
-		if((cbi->mem_high_phys & I386_VM_ADDR_MASK_4MB)
-			<= (phys & I386_VM_ADDR_MASK_4MB)) {
+		if((cbi->mem_high_phys & I386_VM_ADDR_MASK_BIGPAGE)
+			<= (phys & I386_VM_ADDR_MASK_BIGPAGE)) {
 			flags |= I386_VM_PWT | I386_VM_PCD;
 		}
                 pagedir[i] =  phys | flags;
@@ -208,10 +209,8 @@ void vm_enable_paging(void)
 
         pgeok = _cpufeature(_CPUF_I386_PGE);
 
-#ifdef PAE
 	if(_cpufeature(_CPUF_I386_PAE) == 0)
-		panic("kernel built with PAE support, CPU seems to lack PAE support?\n");
-#endif
+		panic("CPU lacks PAE support\n");
 
         cr0= read_cr0();
         cr4= read_cr4();
@@ -226,8 +225,8 @@ void vm_enable_paging(void)
         cr0= read_cr0();
         cr4= read_cr4();
 
-        /* Our page table contains 4MB entries. */
-        cr4 |= I386_CR4_PSE;
+        /* Our page table contains 2MB entries. */
+        cr4 |= I386_CR4_PAE;
 
         write_cr4(cr4);
 
@@ -246,9 +245,15 @@ void vm_enable_paging(void)
 
 phys_bytes pg_load(void)
 {
-	phys_bytes phpagedir = vir2phys(pagedir);
-        write_cr3(phpagedir);
-	return phpagedir;
+	int i;
+	phys_bytes phpagedirtable = vir2phys(pagedirtable);
+
+	for (i = 0; i < 4; i++) {
+		pagedirtable[i] = vir2phys(&pagedir[i*512]) | I386_VM_PRESENT;
+	}
+
+	write_cr3(phpagedirtable);
+	return phpagedirtable;
 }
 
 void pg_clear(void)
@@ -268,7 +273,7 @@ void pg_map(phys_bytes phys, vir_bytes vaddr, vir_bytes vaddr_end,
 	kinfo_t *cbi)
 {
 	static int mapped_pde = -1;
-	static u32_t *pt = NULL;
+	static u64_t *pt = NULL;
 	int pde, pte;
 
 	assert(kernel_may_alloc);
@@ -311,7 +316,8 @@ void pg_map(phys_bytes phys, vir_bytes vaddr, vir_bytes vaddr_end,
 
 void pg_info(reg_t *pagedir_ph, u32_t **pagedir_v)
 {
-	*pagedir_ph = vir2phys(pagedir);
-	*pagedir_v = pagedir;
+	/* XXX: fix types */
+	*pagedir_ph = vir2phys(pagedirtable);
+	*pagedir_v = (u32_t*)pagedirtable;
 }
 

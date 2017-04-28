@@ -17,12 +17,25 @@ extern phys_bytes video_mem_vaddr;
 
 extern char *video_mem;
 
+u64_t pagedirtables[NR_TASKS + NR_PROCS][4] __aligned(32);
+
 static void setcr3(struct proc *p, u32_t cr3, u32_t *v)
 {
+	int i;
+
+	/*
+	 * Fill in the page directory pointer tables, because we fold them into the
+	 * page directory tables to work around VM's two-layer page layout.
+	 */
+	for (i = 0; i < 4; i++) {
+		pagedirtables[p->p_nr][i] = (cr3+i*4096) | I386_VM_PRESENT;
+	}
+	cr3 = (u32_t)&pagedirtables[p->p_nr];
+
 	/* Set process CR3. */
 	p->p_seg.p_cr3 = cr3;
 	assert(p->p_seg.p_cr3);
-	p->p_seg.p_cr3_v = v; 
+	p->p_seg.p_cr3_v = v;
 	if(p == get_cpulocal_var(ptproc)) {
 		write_cr3(p->p_seg.p_cr3);
 	}

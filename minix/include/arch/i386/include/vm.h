@@ -16,11 +16,11 @@ i386/vm.h
 #define I386_VM_PCD	0x010	/* Cache disable */
 #define I386_VM_ACC	0x020	/* Accessed */
 #define I386_VM_ADDR_MASK 0xFFFFF000 /* physical address */
-#define I386_VM_ADDR_MASK_4MB 0xFFC00000 /* physical address */
-#define I386_VM_OFFSET_MASK_4MB 0x003FFFFF /* physical address */
+#define I386_VM_ADDR_MASK_BIGPAGE 0xFFE00000 /* physical address */
+#define I386_VM_OFFSET_MASK_BIGPAGE 0x001FFFFF /* physical address */
 
 /* Page directory specific flags. */
-#define I386_VM_BIGPAGE	0x080	/* 4MB page */
+#define I386_VM_BIGPAGE	0x080	/* 2MB page */
 
 /* Page table specific flags. */
 #define I386_VM_DIRTY    (1L<< 6)	/* Dirty */
@@ -30,13 +30,13 @@ i386/vm.h
 #define I386_VM_PTAVAIL2 (1L<<10)	/* Available for use. */
 #define I386_VM_PTAVAIL3 (1L<<11)	/* Available for use. */
 
-#define I386_VM_PT_ENT_SIZE	4	/* Size of a page table entry */
-#define I386_VM_DIR_ENTRIES	1024	/* Number of entries in a page dir */
-#define I386_VM_DIR_ENT_SHIFT	22	/* Shift to get entry in page dir. */
+#define I386_VM_PT_ENT_SIZE	8	/* Size of a page table entry */
+#define I386_VM_DIR_ENTRIES	(512*4)	/* Number of entries in a page dir */
+#define I386_VM_DIR_ENT_SHIFT	21	/* Shift to get entry in page dir. */
+#define I386_VM_DIR_ENT_MASK	0xFFF	/* Mask to get entry in page dir. */
 #define I386_VM_PT_ENT_SHIFT	12	/* Shift to get entry in page table */
-#define I386_VM_PT_ENT_MASK	0x3FF	/* Mask to get entry in page table */
-#define I386_VM_PT_ENTRIES	1024	/* Number of entries in a page table */
-#define I386_VM_PFA_SHIFT	22	/* Page frame address shift */
+#define I386_VM_PT_ENT_MASK	0x1FF	/* Mask to get entry in page table */
+#define I386_VM_PT_ENTRIES	512	/* Number of entries in a page table */
 
 /* CR0 bits */
 #define I386_CR0_PE		0x00000001	/* Protected mode  */
@@ -59,9 +59,8 @@ i386/vm.h
 
 /* i386 paging 'functions' */
 #define I386_VM_PTE(v)	(((v) >> I386_VM_PT_ENT_SHIFT) & I386_VM_PT_ENT_MASK)
-#define I386_VM_PDE(v)	( (v) >> I386_VM_DIR_ENT_SHIFT)
+#define I386_VM_PDE(v)	(((v) >> I386_VM_DIR_ENT_SHIFT) & I386_VM_DIR_ENT_MASK)
 #define I386_VM_PFA(e)	( (e) & I386_VM_ADDR_MASK)
-#define I386_VM_PAGE(v)	( (v) >> I386_VM_PFA_SHIFT)
 
 /* i386 pagefault error code bits */
 #define I386_VM_PFE_P	0x01	/* Pagefault caused by non-present page.

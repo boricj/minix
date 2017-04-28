@@ -64,8 +64,8 @@ struct vmproc *vmprocess = &vmproc[VM_PROC_NR];
 # define SPAREPAGES 150
 # define STATIC_SPAREPAGES 140 
 #else
-# define SPAREPAGES 20
-# define STATIC_SPAREPAGES 15 
+# define SPAREPAGES 40
+# define STATIC_SPAREPAGES 30 
 #endif /* __arm__ */
 #endif
 
@@ -496,7 +496,11 @@ static int pt_ptalloc(pt_t *pt, int pde, u32_t flags)
 /* Allocate a page table and write its address into the page directory. */
 	int i;
 	phys_bytes pt_phys;
+#if defined(__i386__)
+	u64_t *p;
+#elif defined(__arm__)
 	u32_t *p;
+#endif
 
 	/* Argument must make sense. */
 	assert(pde >= 0 && pde < ARCH_VM_DIR_ENTRIES);
@@ -911,7 +915,7 @@ int pt_writemap(struct vmproc * vmp,
 					ptestr(maskedentry));
 				printf(" expected %s\n", ptestr(entry));
 				printf("found 0x%x, wanted 0x%x\n", 
-					pt->pt_pt[pde][pte], entry);
+					(u32_t)pt->pt_pt[pde][pte], entry);
 				ret = EFAULT;
 				goto resume_exit;
 			}
@@ -1094,7 +1098,7 @@ void pt_init(void)
 #if defined(__arm__)
 	vir_bytes sparepagedirs_mem;
 #endif
-	static u32_t currentpagedir[ARCH_VM_DIR_ENTRIES];
+	static u64_t currentpagedir[ARCH_VM_DIR_ENTRIES];
 	int m = kernel_boot_info.kern_mod;
 #if defined(__i386__)
 	int global_bit_ok = 0;
@@ -1164,7 +1168,7 @@ void pt_init(void)
 #if defined(__i386__)
 	/* global bit and 4MB pages available? */
 	global_bit_ok = _cpufeature(_CPUF_I386_PGE);
-	bigpage_ok = _cpufeature(_CPUF_I386_PSE);
+	bigpage_ok = 1;
 
 	/* Set bit for PTE's and PDE's if available. */
 	if(global_bit_ok)
