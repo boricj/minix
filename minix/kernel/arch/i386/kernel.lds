@@ -1,8 +1,8 @@
 OUTPUT_ARCH("i386")
 ENTRY(__k_unpaged_MINIX)
 
-_kern_phys_base = 0x00400000;	/* phys 4MB aligned for convenient remapping */
-_kern_vir_base =  0xF0400000;	/* map kernel high for max. user vir space */
+_kern_phys_base = 0x00200000;	/* phys 2MB aligned for convenient remapping */
+_kern_vir_base =  0xF0200000;	/* map kernel high for max. user vir space */
 _kern_offset = (_kern_vir_base - _kern_phys_base);
 
 __k_unpaged__kern_offset = _kern_offset;
@@ -12,12 +12,14 @@ __k_unpaged__kern_phys_base = _kern_phys_base;
 SECTIONS
 {
 	. = _kern_phys_base;
-	__k_unpaged__kern_unpaged_start = .;
+	_kern_unpaged_start = .;
 
-	.unpaged_text : { unpaged_*.o(.text) }
-	.unpaged_data ALIGN(4096) : { unpaged_*.o(.data .rodata*) }
-	.unpaged_bss  ALIGN(4096) : { unpaged_*.o(.bss COMMON) }
-	__k_unpaged__kern_unpaged_end = .;
+	.unpaged : {
+		unpaged_*.o(.text)
+		unpaged_*.o(.data .rodata*)
+		unpaged_*.o(.bss COMMON)
+	}
+	_kern_unpaged_end = .;
 
 	. += _kern_offset;
 

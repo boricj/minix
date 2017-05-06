@@ -1,6 +1,3 @@
-
-#define UNPAGED 1	/* for proper kmain() prototype */
-
 #include "kernel/kernel.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -27,12 +24,6 @@
 /* to-be-built kinfo struct, diagnostics buffer */
 kinfo_t kinfo;
 struct kmessages kmessages;
-
-/* pg_utils.c uses this; in this phase, there is a 1:1 mapping. */
-phys_bytes vir2phys(void *addr) { return (phys_bytes) addr; } 
-
-/* mb_utils.c uses this; we can reach it directly */
-char *video_mem = (char *) MULTIBOOT_VIDEO_BUFFER;
 
 /* String length used for mb_itoa */
 #define ITOA_BUFFER_SIZE 20
@@ -244,8 +235,3 @@ kinfo_t *pre_init(u32_t magic, u32_t ebx)
 	/* Done, return boot info so it can be passed to kmain(). */
 	return &kinfo;
 }
-
-void send_diag_sig(void) { }
-void minix_shutdown(int how) { arch_shutdown(how); }
-void busy_delay_ms(int x) { }
-int raise(int sig) { panic("raise(%d)\n", sig); }
